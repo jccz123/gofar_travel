@@ -1,4 +1,3 @@
-TALLER DB ORACLE
 /*PUNTO 2A */
 CREATE TABLESPACE hospital_bills DATAFILE 
 'C:\TALLERDB\hospital_bills1.dbf' SIZE 340M,
@@ -193,3 +192,17 @@ INSERT INTO CATEGORIAS VALUES (sec_categorias.nextval,'ODONTOLOGIA');
 INSERT INTO CATEGORIAS VALUES (sec_categorias.nextval,'CIRUGIA');
 
 SELECT * FROM CATEGORIAS
+.................................................
+
+INSERT INTO SERVICIOS VALUES (sec_servicios.nextval,'EXAMEN DE SANGRE',40000,'1000001');
+INSERT INTO SERVICIOS VALUES (sec_servicios.nextval,'EXAMEN DE ORINA',30000,'1000001');
+INSERT INTO SERVICIOS VALUES (sec_servicios.nextval,'RAYOS X',50000,'1000002');
+INSERT INTO SERVICIOS VALUES (sec_servicios.nextval,'RADIOGRAFIA DE CRANEO',340000,'1000002');
+INSERT INTO SERVICIOS VALUES (sec_servicios.nextval,'PARABOLICA',20000,'1000003');
+INSERT INTO SERVICIOS VALUES (sec_servicios.nextval,'DIRECTV',50000,'1000003');
+INSERT INTO SERVICIOS VALUES (sec_servicios.nextval,'ORTODONCIA',200000,'1000004');
+INSERT INTO SERVICIOS VALUES (sec_servicios.nextval,'IMPLANTALOGIA',100000,'1000004');
+
+SELECT * FROM SERVICIOS
+
+..................................................

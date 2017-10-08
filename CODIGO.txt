@@ -1,0 +1,195 @@
+TALLER DB ORACLE
+/*PUNTO 2A */
+CREATE TABLESPACE hospital_bills DATAFILE 
+'C:\TALLERDB\hospital_bills1.dbf' SIZE 340M,
+'C:\TALLERDB\hospital_bills2.dbf' SIZE 344M,
+'C:\TALLERDB\hospital_bills3.dbf' SIZE 340M;
+...................................................
+/*PUNTO 2B*/
+CREATE TABLESPACE test_purposes DATAFILE
+'C:\TALLERDB\test_purposes.dbf' size 500M;
+..................................................
+/*PUNTO 2C*/
+CREATE UNDO TABLESPACE test_undo DATAFILE
+'C:\TALLERDB\test_undo.dbf' SIZE 5M;
+.................................................
+/*PUNTO 3*/
+ALTER SYSTEM SET UNDO_TABLESPACE = test_undo;
+.................................................
+/*PUNTO 4*/
+CREATE USER AdminUser IDENTIFIED BY AdminUser
+DEFAULT TABLESPACE hospital_bills
+QUOTA UNLIMITED ON hospital_bills;
+.................................................
+/*PUNTO 5*/
+GRANT DBA TO AdminUser;
+GRANT CONNECT TO AdminUser;
+.................................................
+/*PUNTO 6A*/
+CREATE PROFILE manager LIMIT 
+  SESSIONS_PER_USER                 1  
+  IDLE_TIME                        15   
+  FAILED_LOGIN_ATTEMPTS             4   
+  PASSWORD_LIFE_TIME               40;  
+  .....................................................
+/*PUNTO 6B*/
+CREATE PROFILE finance LIMIT 
+  SESSIONS_PER_USER                 1   
+  IDLE_TIME                         3    
+  FAILED_LOGIN_ATTEMPTS             2   
+  PASSWORD_LIFE_TIME               15;
+  ....................................................
+/*PUNTO 6C*/
+CREATE PROFILE development LIMIT 
+  SESSIONS_PER_USER                  2   
+  IDLE_TIME                         30   
+  PASSWORD_LIFE_TIME               100; 
+  ....................................................
+/*PUNTO 7*/
+CREATE USER UserA
+IDENTIFIED BY userA
+DEFAULT TABLESPACE hospital_bills
+QUOTA UNLIMITED ON hospital_bills
+PROFILE manager;
+
+CREATE USER UserB
+IDENTIFIED BY userB
+DEFAULT TABLESPACE hospital_bills
+QUOTA UNLIMITED ON hospital_bills
+PROFILE manager;
+
+CREATE USER UserC
+IDENTIFIED BY userC
+DEFAULT TABLESPACE hospital_bills
+QUOTA UNLIMITED ON hospital_bills
+PROFILE finance;
+
+CREATE USER UserD
+IDENTIFIED BY userD
+DEFAULT TABLESPACE hospital_bills
+QUOTA UNLIMITED ON hospital_bills
+PROFILE development;
+
+GRANT CONNECT TO UserA;
+GRANT CONNECT TO UserB;
+GRANT CONNECT TO UserC;
+GRANT CONNECT TO UserD;
+.........................................................
+/*PUNTO 8*/
+ALTER USER UserA ACCOUNT LOCK;
+ALTER USER UserB ACCOUNT LOCK;
+ALTER USER UserC ACCOUNT LOCK;
+.........................................................
+/*PUNTO 9*/
+DROP TABLESPACE test_purposes INCLUDING CONTENTS AND DATAFILES;
+.........................................................
+/*PUNTO 10  SECUENCIAS*/
+
+ CREATE SEQUENCE sec_pacientes
+  start with 1
+  increment by 1
+  maxvalue 999
+  minvalue 1;
+  
+  CREATE SEQUENCE sec_facturas
+  start with 1000
+  increment by 1
+  maxvalue 9999
+  minvalue 1000;
+  
+  CREATE SEQUENCE sec_detalles
+  start with 10000
+  increment by 1
+  maxvalue 99999
+  minvalue 10000;
+  
+  CREATE SEQUENCE sec_servicios
+  start with 100000
+  increment by 1
+  maxvalue 999999
+  minvalue 100000;
+  
+ CREATE SEQUENCE sec_categorias
+  start with 1000000
+  increment by 1
+  maxvalue 9999999
+  minvalue 1000000;
+  
+........................................................
+/*PUNTO 10 TABLAS*/
+  
+CREATE TABLE PACIENTES
+(
+PACIENTE_ID NUMBER PRIMARY KEY,
+NOMBRE VARCHAR(50),
+APELLIDO VARCHAR(50),
+DIRECCION VARCHAR(50),
+CIUDAD VARCHAR(50),
+TELEFONO VARCHAR(20));
+
+DESCRIBE TABLE PACIENTES;
+
+SELECT sec_pacientes.nextval from dual;
+INSERT INTO PACIENTES VALUES (sec_pacientes.nextval,'juan','carmona','cra 63 # 78-56','medellin','2345678');
+INSERT INTO PACIENTES VALUES (sec_pacientes.nextval,'camilo','zapata','cra 64 # 79-50','bogota','2340000');
+INSERT INTO PACIENTES VALUES (sec_pacientes.nextval,'elvia','castrillo','cra 65 # 78-86','cali','2345678');
+INSERT INTO PACIENTES VALUES (sec_pacientes.nextval,'lucia','banegas','cra 62 # 75-96','medellin','2222222');
+INSERT INTO PACIENTES VALUES (sec_pacientes.nextval,'ange','rojo','cra 53 # 78-56','cali','2322222');
+INSERT INTO PACIENTES VALUES (sec_pacientes.nextval,'luisa','boorquez','cra 53 # 45-56','armenia','2355555');
+INSERT INTO PACIENTES VALUES (sec_pacientes.nextval,'luis','carmona','cra 53 # 78-56','tolima','32245678');
+INSERT INTO PACIENTES VALUES (sec_pacientes.nextval,'fredy','ruiz','cra 34 # 78-56','bogota','9945678');
+INSERT INTO PACIENTES VALUES (sec_pacientes.nextval,'carlos','marquez','cra 23 # 89-56','barranquilla','2345678');
+INSERT INTO PACIENTES VALUES (sec_pacientes.nextval,'mario','tobon','cra 53 # 18-56','medellin','777777');
+INSERT INTO PACIENTES VALUES (sec_pacientes.nextval,'marta','galvis','cra 83 # 58-56','tunja','777345678');
+
+SELECT * FROM PACIENTES;
+...........................................................................................................................
+CREATE TABLE FACTURAS
+(
+FACTURA_ID NUMBER PRIMARY KEY,
+FECHA DATE,
+TOTAL_PAGAR INT,
+PACIENTE_ID NUMBER
+);
+DESCRIBE TABLE FACTURAS;
+SELECT sec_facturas.nextval from dual;
+............................................................................................................................
+
+CREATE TABLE DETALLES
+(
+DETALLE_ID NUMBER,
+FACTURA_ID NUMBER,
+FECHA_DETALLE DATE,
+PRECIO INT,
+SERVICIO_ID NUMBER,
+PRIMARY KEY(DETALLE_ID,FACTURA_ID)
+);
+DESCRIBE TABLE DETALLES;
+SELECT sec_detalles.nextval from dual;
+................................................................
+
+CREATE TABLE SERVICIOS
+(
+SERVICIO_ID NUMBER PRIMARY KEY,
+NOMBRE_SERVICIO VARCHAR(50),
+PRECIO INT,
+CATEGORIA_ID NUMBER
+);
+DESCRIBE TABLE SERVICIOS;
+SELECT sec_servicios.nextval from dual;
+...................................................................................
+CREATE TABLE CATEGORIAS
+(
+CATEGORIA_ID NUMBER PRIMARY KEY,
+DESCRIPCION VARCHAR (80)
+);
+DESCRIBE TABLE CATEGORIAS;
+SELECT sec_categorias.nextval from dual;
+
+INSERT INTO CATEGORIAS VALUES (sec_categorias.nextval,'LABORATORIO');
+INSERT INTO CATEGORIAS VALUES (sec_categorias.nextval,'RADIOGRAFIA');
+INSERT INTO CATEGORIAS VALUES (sec_categorias.nextval,'TELEVISION');
+INSERT INTO CATEGORIAS VALUES (sec_categorias.nextval,'ODONTOLOGIA');
+INSERT INTO CATEGORIAS VALUES (sec_categorias.nextval,'CIRUGIA');
+
+SELECT * FROM CATEGORIAS

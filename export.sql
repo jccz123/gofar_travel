@@ -1,0 +1,420 @@
+--------------------------------------------------------
+-- Archivo creado  - sábado-noviembre-18-2017   
+--------------------------------------------------------
+DROP VIEW "JUANCA"."MUESTRA";
+DROP VIEW "JUANCA"."PRECIO_TOTAL";
+DROP VIEW "JUANCA"."PRUEBA_FIN";
+DROP VIEW "JUANCA"."PRUEBA_T2";
+DROP VIEW "JUANCA"."PRUEBA_5";
+DROP TABLE "JUANCA"."CENTRO_COSTOS";
+DROP TABLE "JUANCA"."DETALLES";
+DROP TABLE "JUANCA"."FACTURAS";
+DROP TABLE "JUANCA"."PACIENTES";
+DROP TABLE "JUANCA"."SERVICIOS";
+DROP SEQUENCE "JUANCA"."SEC_CENTRO_COSTOS";
+DROP SEQUENCE "JUANCA"."SEC_DETALLES";
+DROP SEQUENCE "JUANCA"."SEC_FACTURAS";
+DROP SEQUENCE "JUANCA"."SEC_PACIENTES";
+DROP SEQUENCE "JUANCA"."SEC_SERVICIOS";
+DROP PROCEDURE "JUANCA"."LABORATORIO";
+DROP PROCEDURE "JUANCA"."RADIOGRAFIA";
+DROP PROCEDURE "JUANCA"."SERVICIO_CONSUMIDO";
+--------------------------------------------------------
+--  DDL for View MUESTRA
+--------------------------------------------------------
+
+  CREATE OR REPLACE FORCE VIEW "JUANCA"."MUESTRA" ("DESCRIPCION", "NOMBRE_SERVICIO", "PRECIO") AS 
+  SELECT CC.DESCRIPCION, SR.NOMBRE_SERVICIO,SR.PRECIO
+FROM  CENTRO_COSTOS CC,SERVICIOS SR 
+WHERE CC.CENTRO_COSTOS_ID = SR.ID_CENTRO_COSTOS_SERVICIO
+;
+--------------------------------------------------------
+--  DDL for View PRECIO_TOTAL
+--------------------------------------------------------
+
+  CREATE OR REPLACE FORCE VIEW "JUANCA"."PRECIO_TOTAL" ("TOTAL_PRECIO") AS 
+  select SUM(PRECIO) AS TOTAL_PRECIO
+from SERVICIOS
+;
+--------------------------------------------------------
+--  DDL for View PRUEBA_FIN
+--------------------------------------------------------
+
+  CREATE OR REPLACE FORCE VIEW "JUANCA"."PRUEBA_FIN" ("PACIENTE_ID", "NOMBRE", "DIRECCION", "FECHA", "TOTAL_PAGAR") AS 
+  SELECT PACIENTES.PACIENTE_ID,PACIENTES.NOMBRE,PACIENTES.DIRECCION,FACTURAS.FECHA,FACTURAS.TOTAL_PAGAR
+FROM FACTURAS INNER JOIN DETALLES ON ID_DETALLE_FACTURA = FACTURA_ID 
+INNER JOIN PACIENTES ON FACTURAS.ID_PACIENTE_FACTURA = PACIENTES.PACIENTE_ID
+WHERE DETALLES.PRECIO =(
+SELECT MAX(DETALLES.PRECIO) FROM DETALLES 
+INNER JOIN SERVICIOS ON SERVICIOS.SERVICIO_ID = DETALLES.ID_DETALLE_SERVICIO
+INNER JOIN CENTRO_COSTOS ON SERVICIOS.ID_CENTRO_COSTOS_SERVICIO = CENTRO_COSTOS.CENTRO_COSTOS_ID
+WHERE CENTRO_COSTOS.DESCRIPCION  = 'SERVICIO_CONSUMIDO')
+;
+--------------------------------------------------------
+--  DDL for View PRUEBA_T2
+--------------------------------------------------------
+
+  CREATE OR REPLACE FORCE VIEW "JUANCA"."PRUEBA_T2" ("FACTURA_ID", "FECHA", "FECHA_ENTRADA", "FECHA_SALIDA", "TOTAL_PAGAR", "ID_PACIENTE_FACTURA", "DETALLE_ID", "ID_DETALLE_FACTURA", "ID_DETALLE_SERVICIO", "FECHA_DETALLE", "PRECIO") AS 
+  SELECT "FACTURA_ID","FECHA","FECHA_ENTRADA","FECHA_SALIDA","TOTAL_PAGAR","ID_PACIENTE_FACTURA","DETALLE_ID","ID_DETALLE_FACTURA","ID_DETALLE_SERVICIO","FECHA_DETALLE","PRECIO" FROM FACTURAS INNER JOIN DETALLES ON ID_DETALLE_FACTURA = FACTURA_ID
+WHERE DETALLES.PRECIO =(
+SELECT MAX(DETALLES.PRECIO) FROM DETALLES 
+INNER JOIN SERVICIOS ON SERVICIOS.SERVICIO_ID = DETALLES.ID_DETALLE_SERVICIO
+INNER JOIN CENTRO_COSTOS ON SERVICIOS.ID_CENTRO_COSTOS_SERVICIO = CENTRO_COSTOS.CENTRO_COSTOS_ID
+WHERE CENTRO_COSTOS.DESCRIPCION  = 'SERVICIO_CONSUMIDO')
+;
+--------------------------------------------------------
+--  DDL for View PRUEBA_5
+--------------------------------------------------------
+
+  CREATE OR REPLACE FORCE VIEW "JUANCA"."PRUEBA_5" ("PACIENTE_ID", "NOMBRE", "DIRECCION", "FECHA", "FECHA_ENTRADA", "FECHA_SALIDA", "ID_DETALLE_SERVICIO", "NOMBRE_SERVICIO", "PRECIO") AS 
+  SELECT PACIENTES.PACIENTE_ID,PACIENTES.NOMBRE,PACIENTES.DIRECCION,FACTURAS.FECHA,
+FACTURAS.FECHA_ENTRADA,FACTURAS.FECHA_SALIDA,DETALLES.ID_DETALLE_SERVICIO,SERVICIOS.NOMBRE_SERVICIO,SERVICIOS.PRECIO
+FROM FACTURAS INNER JOIN PACIENTES ON FACTURAS.ID_PACIENTE_FACTURA = PACIENTES.PACIENTE_ID
+INNER JOIN DETALLES ON ID_DETALLE_FACTURA = FACTURA_ID
+INNER JOIN SERVICIOS ON ID_DETALLE_SERVICIO = SERVICIO_ID
+WHERE FACTURAS.FACTURA_ID  = 1001
+;
+--------------------------------------------------------
+--  DDL for Table CENTRO_COSTOS
+--------------------------------------------------------
+
+  CREATE TABLE "JUANCA"."CENTRO_COSTOS" 
+   (	"CENTRO_COSTOS_ID" NUMBER, 
+	"DESCRIPCION" VARCHAR2(255 BYTE)
+   ) ;
+--------------------------------------------------------
+--  DDL for Table DETALLES
+--------------------------------------------------------
+
+  CREATE TABLE "JUANCA"."DETALLES" 
+   (	"DETALLE_ID" NUMBER, 
+	"ID_DETALLE_FACTURA" NUMBER, 
+	"ID_DETALLE_SERVICIO" NUMBER, 
+	"FECHA_DETALLE" DATE, 
+	"PRECIO" NUMBER(*,0)
+   ) ;
+--------------------------------------------------------
+--  DDL for Table FACTURAS
+--------------------------------------------------------
+
+  CREATE TABLE "JUANCA"."FACTURAS" 
+   (	"FACTURA_ID" NUMBER, 
+	"FECHA" DATE, 
+	"FECHA_ENTRADA" DATE, 
+	"FECHA_SALIDA" DATE, 
+	"TOTAL_PAGAR" NUMBER(*,0), 
+	"ID_PACIENTE_FACTURA" NUMBER
+   ) ;
+--------------------------------------------------------
+--  DDL for Table PACIENTES
+--------------------------------------------------------
+
+  CREATE TABLE "JUANCA"."PACIENTES" 
+   (	"PACIENTE_ID" NUMBER, 
+	"NOMBRE" VARCHAR2(255 BYTE), 
+	"DIRECCION" VARCHAR2(50 BYTE), 
+	"CIUDAD" VARCHAR2(50 BYTE), 
+	"ESTADO" VARCHAR2(20 BYTE), 
+	"CODIGO_POSTAL" VARCHAR2(20 BYTE)
+   ) ;
+--------------------------------------------------------
+--  DDL for Table SERVICIOS
+--------------------------------------------------------
+
+  CREATE TABLE "JUANCA"."SERVICIOS" 
+   (	"SERVICIO_ID" NUMBER, 
+	"NOMBRE_SERVICIO" VARCHAR2(50 BYTE), 
+	"PRECIO" NUMBER(*,0), 
+	"ID_CENTRO_COSTOS_SERVICIO" NUMBER
+   ) ;
+--------------------------------------------------------
+--  DDL for Sequence SEC_CENTRO_COSTOS
+--------------------------------------------------------
+
+   CREATE SEQUENCE  "JUANCA"."SEC_CENTRO_COSTOS"  MINVALUE 1000000 MAXVALUE 9999999 INCREMENT BY 1 START WITH 1000020 CACHE 20 NOORDER  NOCYCLE ;
+--------------------------------------------------------
+--  DDL for Sequence SEC_DETALLES
+--------------------------------------------------------
+
+   CREATE SEQUENCE  "JUANCA"."SEC_DETALLES"  MINVALUE 10000 MAXVALUE 99999 INCREMENT BY 1 START WITH 10020 CACHE 20 NOORDER  NOCYCLE ;
+--------------------------------------------------------
+--  DDL for Sequence SEC_FACTURAS
+--------------------------------------------------------
+
+   CREATE SEQUENCE  "JUANCA"."SEC_FACTURAS"  MINVALUE 1000 MAXVALUE 9999 INCREMENT BY 1 START WITH 1020 CACHE 20 NOORDER  NOCYCLE ;
+--------------------------------------------------------
+--  DDL for Sequence SEC_PACIENTES
+--------------------------------------------------------
+
+   CREATE SEQUENCE  "JUANCA"."SEC_PACIENTES"  MINVALUE 1 MAXVALUE 999 INCREMENT BY 1 START WITH 21 CACHE 20 NOORDER  NOCYCLE ;
+--------------------------------------------------------
+--  DDL for Sequence SEC_SERVICIOS
+--------------------------------------------------------
+
+   CREATE SEQUENCE  "JUANCA"."SEC_SERVICIOS"  MINVALUE 100000 MAXVALUE 999999 INCREMENT BY 1 START WITH 100020 CACHE 20 NOORDER  NOCYCLE ;
+REM INSERTING into JUANCA.CENTRO_COSTOS
+SET DEFINE OFF;
+Insert into JUANCA.CENTRO_COSTOS (CENTRO_COSTOS_ID,DESCRIPCION) values ('1000001','LABORATORIO');
+Insert into JUANCA.CENTRO_COSTOS (CENTRO_COSTOS_ID,DESCRIPCION) values ('1000002','RADIOGRAFIA');
+Insert into JUANCA.CENTRO_COSTOS (CENTRO_COSTOS_ID,DESCRIPCION) values ('1000003','TELEVISION');
+Insert into JUANCA.CENTRO_COSTOS (CENTRO_COSTOS_ID,DESCRIPCION) values ('1000004','ODONTOLOGIA');
+Insert into JUANCA.CENTRO_COSTOS (CENTRO_COSTOS_ID,DESCRIPCION) values ('1000005','CIRUGIA');
+Insert into JUANCA.CENTRO_COSTOS (CENTRO_COSTOS_ID,DESCRIPCION) values ('1000006','SERVICIO_CONSUMIDO');
+REM INSERTING into JUANCA.DETALLES
+SET DEFINE OFF;
+Insert into JUANCA.DETALLES (DETALLE_ID,ID_DETALLE_FACTURA,ID_DETALLE_SERVICIO,FECHA_DETALLE,PRECIO) values ('10002','1001','100001',to_date('02/05/17','DD/MM/RR'),'40000');
+Insert into JUANCA.DETALLES (DETALLE_ID,ID_DETALLE_FACTURA,ID_DETALLE_SERVICIO,FECHA_DETALLE,PRECIO) values ('10003','1001','100002',to_date('03/05/17','DD/MM/RR'),'30000');
+Insert into JUANCA.DETALLES (DETALLE_ID,ID_DETALLE_FACTURA,ID_DETALLE_SERVICIO,FECHA_DETALLE,PRECIO) values ('10004','1001','100008',to_date('04/05/17','DD/MM/RR'),'100000');
+Insert into JUANCA.DETALLES (DETALLE_ID,ID_DETALLE_FACTURA,ID_DETALLE_SERVICIO,FECHA_DETALLE,PRECIO) values ('10005','1001','100002',to_date('04/05/17','DD/MM/RR'),'30000');
+Insert into JUANCA.DETALLES (DETALLE_ID,ID_DETALLE_FACTURA,ID_DETALLE_SERVICIO,FECHA_DETALLE,PRECIO) values ('10006','1007','100009',to_date('29/03/17','DD/MM/RR'),'500000');
+Insert into JUANCA.DETALLES (DETALLE_ID,ID_DETALLE_FACTURA,ID_DETALLE_SERVICIO,FECHA_DETALLE,PRECIO) values ('10007','1007','100010',to_date('30/03/17','DD/MM/RR'),'500000');
+REM INSERTING into JUANCA.FACTURAS
+SET DEFINE OFF;
+Insert into JUANCA.FACTURAS (FACTURA_ID,FECHA,FECHA_ENTRADA,FECHA_SALIDA,TOTAL_PAGAR,ID_PACIENTE_FACTURA) values ('1001',to_date('04/05/17','DD/MM/RR'),to_date('01/05/17','DD/MM/RR'),to_date('04/05/17','DD/MM/RR'),'200000','2');
+Insert into JUANCA.FACTURAS (FACTURA_ID,FECHA,FECHA_ENTRADA,FECHA_SALIDA,TOTAL_PAGAR,ID_PACIENTE_FACTURA) values ('1004',to_date('01/01/17','DD/MM/RR'),to_date('11/12/16','DD/MM/RR'),to_date('01/01/17','DD/MM/RR'),'1000000','5');
+Insert into JUANCA.FACTURAS (FACTURA_ID,FECHA,FECHA_ENTRADA,FECHA_SALIDA,TOTAL_PAGAR,ID_PACIENTE_FACTURA) values ('1005',to_date('02/02/17','DD/MM/RR'),to_date('25/01/17','DD/MM/RR'),to_date('02/02/17','DD/MM/RR'),'2000000','6');
+Insert into JUANCA.FACTURAS (FACTURA_ID,FECHA,FECHA_ENTRADA,FECHA_SALIDA,TOTAL_PAGAR,ID_PACIENTE_FACTURA) values ('1006',to_date('03/03/17','DD/MM/RR'),to_date('26/02/17','DD/MM/RR'),to_date('03/03/17','DD/MM/RR'),'3000000','7');
+Insert into JUANCA.FACTURAS (FACTURA_ID,FECHA,FECHA_ENTRADA,FECHA_SALIDA,TOTAL_PAGAR,ID_PACIENTE_FACTURA) values ('1007',to_date('04/04/17','DD/MM/RR'),to_date('28/03/17','DD/MM/RR'),to_date('04/04/17','DD/MM/RR'),'4000000','8');
+REM INSERTING into JUANCA.PACIENTES
+SET DEFINE OFF;
+Insert into JUANCA.PACIENTES (PACIENTE_ID,NOMBRE,DIRECCION,CIUDAD,ESTADO,CODIGO_POSTAL) values ('2','JUAN','CALLE 6','MEDELLIN','ANTIOQUIA','2323');
+Insert into JUANCA.PACIENTES (PACIENTE_ID,NOMBRE,DIRECCION,CIUDAD,ESTADO,CODIGO_POSTAL) values ('5','juan','carmona','cra 63 # 78-56','medellin','2345678');
+Insert into JUANCA.PACIENTES (PACIENTE_ID,NOMBRE,DIRECCION,CIUDAD,ESTADO,CODIGO_POSTAL) values ('6','camilo','zapata','cra 64 # 79-50','bogota','2340000');
+Insert into JUANCA.PACIENTES (PACIENTE_ID,NOMBRE,DIRECCION,CIUDAD,ESTADO,CODIGO_POSTAL) values ('7','elvia','castrillo','cra 65 # 78-86','cali','2345678');
+Insert into JUANCA.PACIENTES (PACIENTE_ID,NOMBRE,DIRECCION,CIUDAD,ESTADO,CODIGO_POSTAL) values ('8','lucia','banegas','cra 62 # 75-96','medellin','2222222');
+Insert into JUANCA.PACIENTES (PACIENTE_ID,NOMBRE,DIRECCION,CIUDAD,ESTADO,CODIGO_POSTAL) values ('9','ange','rojo','cra 53 # 78-56','cali','2322222');
+Insert into JUANCA.PACIENTES (PACIENTE_ID,NOMBRE,DIRECCION,CIUDAD,ESTADO,CODIGO_POSTAL) values ('10','luisa','boorquez','cra 53 # 45-56','armenia','2355555');
+Insert into JUANCA.PACIENTES (PACIENTE_ID,NOMBRE,DIRECCION,CIUDAD,ESTADO,CODIGO_POSTAL) values ('11','luis','carmona','cra 53 # 78-56','tolima','32245678');
+Insert into JUANCA.PACIENTES (PACIENTE_ID,NOMBRE,DIRECCION,CIUDAD,ESTADO,CODIGO_POSTAL) values ('12','fredy','ruiz','cra 34 # 78-56','bogota','9945678');
+Insert into JUANCA.PACIENTES (PACIENTE_ID,NOMBRE,DIRECCION,CIUDAD,ESTADO,CODIGO_POSTAL) values ('13','carlos','marquez','cra 23 # 89-56','barranquilla','2345678');
+Insert into JUANCA.PACIENTES (PACIENTE_ID,NOMBRE,DIRECCION,CIUDAD,ESTADO,CODIGO_POSTAL) values ('14','mario','tobon','cra 53 # 18-56','medellin','777777');
+Insert into JUANCA.PACIENTES (PACIENTE_ID,NOMBRE,DIRECCION,CIUDAD,ESTADO,CODIGO_POSTAL) values ('15','marta','galvis','cra 83 # 58-56','tunja','777345678');
+REM INSERTING into JUANCA.SERVICIOS
+SET DEFINE OFF;
+Insert into JUANCA.SERVICIOS (SERVICIO_ID,NOMBRE_SERVICIO,PRECIO,ID_CENTRO_COSTOS_SERVICIO) values ('100001','EXAMEN DE SANGRE','40000','1000001');
+Insert into JUANCA.SERVICIOS (SERVICIO_ID,NOMBRE_SERVICIO,PRECIO,ID_CENTRO_COSTOS_SERVICIO) values ('100002','EXAMEN DE ORINA','30000','1000001');
+Insert into JUANCA.SERVICIOS (SERVICIO_ID,NOMBRE_SERVICIO,PRECIO,ID_CENTRO_COSTOS_SERVICIO) values ('100003','RAYOS X','50000','1000002');
+Insert into JUANCA.SERVICIOS (SERVICIO_ID,NOMBRE_SERVICIO,PRECIO,ID_CENTRO_COSTOS_SERVICIO) values ('100004','RADIOGRAFIA DE CRANEO','340000','1000002');
+Insert into JUANCA.SERVICIOS (SERVICIO_ID,NOMBRE_SERVICIO,PRECIO,ID_CENTRO_COSTOS_SERVICIO) values ('100005','PARABOLICA','20000','1000003');
+Insert into JUANCA.SERVICIOS (SERVICIO_ID,NOMBRE_SERVICIO,PRECIO,ID_CENTRO_COSTOS_SERVICIO) values ('100006','DIRECTV','50000','1000003');
+Insert into JUANCA.SERVICIOS (SERVICIO_ID,NOMBRE_SERVICIO,PRECIO,ID_CENTRO_COSTOS_SERVICIO) values ('100007','ORTODONCIA','200000','1000004');
+Insert into JUANCA.SERVICIOS (SERVICIO_ID,NOMBRE_SERVICIO,PRECIO,ID_CENTRO_COSTOS_SERVICIO) values ('100008','IMPLANTALOGIA','100000','1000004');
+Insert into JUANCA.SERVICIOS (SERVICIO_ID,NOMBRE_SERVICIO,PRECIO,ID_CENTRO_COSTOS_SERVICIO) values ('100009','ALIMENTACION','510000','1000006');
+Insert into JUANCA.SERVICIOS (SERVICIO_ID,NOMBRE_SERVICIO,PRECIO,ID_CENTRO_COSTOS_SERVICIO) values ('100010','HABITACION','510000','1000006');
+REM INSERTING into JUANCA.MUESTRA
+SET DEFINE OFF;
+Insert into JUANCA.MUESTRA (DESCRIPCION,NOMBRE_SERVICIO,PRECIO) values ('LABORATORIO','EXAMEN DE SANGRE','40000');
+Insert into JUANCA.MUESTRA (DESCRIPCION,NOMBRE_SERVICIO,PRECIO) values ('LABORATORIO','EXAMEN DE ORINA','30000');
+Insert into JUANCA.MUESTRA (DESCRIPCION,NOMBRE_SERVICIO,PRECIO) values ('RADIOGRAFIA','RAYOS X','50000');
+Insert into JUANCA.MUESTRA (DESCRIPCION,NOMBRE_SERVICIO,PRECIO) values ('RADIOGRAFIA','RADIOGRAFIA DE CRANEO','340000');
+Insert into JUANCA.MUESTRA (DESCRIPCION,NOMBRE_SERVICIO,PRECIO) values ('TELEVISION','PARABOLICA','20000');
+Insert into JUANCA.MUESTRA (DESCRIPCION,NOMBRE_SERVICIO,PRECIO) values ('TELEVISION','DIRECTV','50000');
+Insert into JUANCA.MUESTRA (DESCRIPCION,NOMBRE_SERVICIO,PRECIO) values ('ODONTOLOGIA','ORTODONCIA','200000');
+Insert into JUANCA.MUESTRA (DESCRIPCION,NOMBRE_SERVICIO,PRECIO) values ('ODONTOLOGIA','IMPLANTALOGIA','100000');
+Insert into JUANCA.MUESTRA (DESCRIPCION,NOMBRE_SERVICIO,PRECIO) values ('SERVICIO_CONSUMIDO','ALIMENTACION','510000');
+Insert into JUANCA.MUESTRA (DESCRIPCION,NOMBRE_SERVICIO,PRECIO) values ('SERVICIO_CONSUMIDO','HABITACION','510000');
+REM INSERTING into JUANCA.PRECIO_TOTAL
+SET DEFINE OFF;
+Insert into JUANCA.PRECIO_TOTAL (TOTAL_PRECIO) values ('1850000');
+REM INSERTING into JUANCA.PRUEBA_FIN
+SET DEFINE OFF;
+Insert into JUANCA.PRUEBA_FIN (PACIENTE_ID,NOMBRE,DIRECCION,FECHA,TOTAL_PAGAR) values ('8','lucia','banegas',to_date('04/04/17','DD/MM/RR'),'4000000');
+Insert into JUANCA.PRUEBA_FIN (PACIENTE_ID,NOMBRE,DIRECCION,FECHA,TOTAL_PAGAR) values ('8','lucia','banegas',to_date('04/04/17','DD/MM/RR'),'4000000');
+REM INSERTING into JUANCA.PRUEBA_T2
+SET DEFINE OFF;
+Insert into JUANCA.PRUEBA_T2 (FACTURA_ID,FECHA,FECHA_ENTRADA,FECHA_SALIDA,TOTAL_PAGAR,ID_PACIENTE_FACTURA,DETALLE_ID,ID_DETALLE_FACTURA,ID_DETALLE_SERVICIO,FECHA_DETALLE,PRECIO) values ('1007',to_date('04/04/17','DD/MM/RR'),to_date('28/03/17','DD/MM/RR'),to_date('04/04/17','DD/MM/RR'),'4000000','8','10006','1007','100009',to_date('29/03/17','DD/MM/RR'),'500000');
+Insert into JUANCA.PRUEBA_T2 (FACTURA_ID,FECHA,FECHA_ENTRADA,FECHA_SALIDA,TOTAL_PAGAR,ID_PACIENTE_FACTURA,DETALLE_ID,ID_DETALLE_FACTURA,ID_DETALLE_SERVICIO,FECHA_DETALLE,PRECIO) values ('1007',to_date('04/04/17','DD/MM/RR'),to_date('28/03/17','DD/MM/RR'),to_date('04/04/17','DD/MM/RR'),'4000000','8','10007','1007','100010',to_date('30/03/17','DD/MM/RR'),'500000');
+REM INSERTING into JUANCA.PRUEBA_5
+SET DEFINE OFF;
+Insert into JUANCA.PRUEBA_5 (PACIENTE_ID,NOMBRE,DIRECCION,FECHA,FECHA_ENTRADA,FECHA_SALIDA,ID_DETALLE_SERVICIO,NOMBRE_SERVICIO,PRECIO) values ('2','JUAN','CALLE 6',to_date('04/05/17','DD/MM/RR'),to_date('01/05/17','DD/MM/RR'),to_date('04/05/17','DD/MM/RR'),'100001','EXAMEN DE SANGRE','40000');
+Insert into JUANCA.PRUEBA_5 (PACIENTE_ID,NOMBRE,DIRECCION,FECHA,FECHA_ENTRADA,FECHA_SALIDA,ID_DETALLE_SERVICIO,NOMBRE_SERVICIO,PRECIO) values ('2','JUAN','CALLE 6',to_date('04/05/17','DD/MM/RR'),to_date('01/05/17','DD/MM/RR'),to_date('04/05/17','DD/MM/RR'),'100002','EXAMEN DE ORINA','30000');
+Insert into JUANCA.PRUEBA_5 (PACIENTE_ID,NOMBRE,DIRECCION,FECHA,FECHA_ENTRADA,FECHA_SALIDA,ID_DETALLE_SERVICIO,NOMBRE_SERVICIO,PRECIO) values ('2','JUAN','CALLE 6',to_date('04/05/17','DD/MM/RR'),to_date('01/05/17','DD/MM/RR'),to_date('04/05/17','DD/MM/RR'),'100002','EXAMEN DE ORINA','30000');
+Insert into JUANCA.PRUEBA_5 (PACIENTE_ID,NOMBRE,DIRECCION,FECHA,FECHA_ENTRADA,FECHA_SALIDA,ID_DETALLE_SERVICIO,NOMBRE_SERVICIO,PRECIO) values ('2','JUAN','CALLE 6',to_date('04/05/17','DD/MM/RR'),to_date('01/05/17','DD/MM/RR'),to_date('04/05/17','DD/MM/RR'),'100008','IMPLANTALOGIA','100000');
+--------------------------------------------------------
+--  DDL for Index SYS_C007342
+--------------------------------------------------------
+
+  CREATE UNIQUE INDEX "JUANCA"."SYS_C007342" ON "JUANCA"."PACIENTES" ("PACIENTE_ID") 
+  ;
+--------------------------------------------------------
+--  DDL for Index SYS_C007343
+--------------------------------------------------------
+
+  CREATE UNIQUE INDEX "JUANCA"."SYS_C007343" ON "JUANCA"."CENTRO_COSTOS" ("CENTRO_COSTOS_ID") 
+  ;
+--------------------------------------------------------
+--  DDL for Index SYS_C007344
+--------------------------------------------------------
+
+  CREATE UNIQUE INDEX "JUANCA"."SYS_C007344" ON "JUANCA"."SERVICIOS" ("SERVICIO_ID") 
+  ;
+--------------------------------------------------------
+--  DDL for Index SYS_C007346
+--------------------------------------------------------
+
+  CREATE UNIQUE INDEX "JUANCA"."SYS_C007346" ON "JUANCA"."FACTURAS" ("FACTURA_ID") 
+  ;
+--------------------------------------------------------
+--  DDL for Index SYS_C007348
+--------------------------------------------------------
+
+  CREATE UNIQUE INDEX "JUANCA"."SYS_C007348" ON "JUANCA"."DETALLES" ("DETALLE_ID") 
+  ;
+--------------------------------------------------------
+--  DDL for Trigger DIS_CENTRO_COSTOS
+--------------------------------------------------------
+
+  CREATE OR REPLACE TRIGGER "JUANCA"."DIS_CENTRO_COSTOS" 
+   before insert on "JUANCA"."CENTRO_COSTOS" 
+   for each row 
+begin  
+   if inserting then 
+      if :NEW."CENTRO_COSTOS_ID" is null then 
+         select SEC_CENTRO_COSTOS.nextval into :NEW."CENTRO_COSTOS_ID" from dual; 
+      end if; 
+   end if; 
+end;
+
+/
+ALTER TRIGGER "JUANCA"."DIS_CENTRO_COSTOS" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger DIS_DETALLES
+--------------------------------------------------------
+
+  CREATE OR REPLACE TRIGGER "JUANCA"."DIS_DETALLES" 
+   before insert on "JUANCA"."DETALLES" 
+   for each row 
+begin  
+   if inserting then 
+      if :NEW."DETALLE_ID" is null then 
+         select SEC_DETALLES.nextval into :NEW."DETALLE_ID" from dual; 
+      end if; 
+   end if; 
+end;
+
+/
+ALTER TRIGGER "JUANCA"."DIS_DETALLES" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger DIS_FACTURA
+--------------------------------------------------------
+
+  CREATE OR REPLACE TRIGGER "JUANCA"."DIS_FACTURA" 
+   before insert on "JUANCA"."FACTURAS" 
+   for each row 
+begin  
+   if inserting then 
+      if :NEW."FACTURA_ID" is null then 
+         select SEC_FACTURAS.nextval into :NEW."FACTURA_ID" from dual; 
+      end if; 
+   end if; 
+end;
+
+/
+ALTER TRIGGER "JUANCA"."DIS_FACTURA" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger DIS_SERVICIOS
+--------------------------------------------------------
+
+  CREATE OR REPLACE TRIGGER "JUANCA"."DIS_SERVICIOS" 
+   before insert on "JUANCA"."SERVICIOS" 
+   for each row 
+begin  
+   if inserting then 
+      if :NEW."SERVICIO_ID" is null then 
+         select SEC_SERVICIOS.nextval into :NEW."SERVICIO_ID" from dual; 
+      end if; 
+   end if; 
+end;
+
+/
+ALTER TRIGGER "JUANCA"."DIS_SERVICIOS" ENABLE;
+--------------------------------------------------------
+--  DDL for Procedure LABORATORIO
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE PROCEDURE "JUANCA"."LABORATORIO" 
+(
+  porcentaje IN NUMBER DEFAULT 0.035 
+) AS 
+BEGIN
+    update servicios set precio=precio+(precio*porcentaje/100)
+    where    ID_CENTRO_COSTOS_SERVICIO = 1000001;
+END LABORATORIO;
+
+/
+--------------------------------------------------------
+--  DDL for Procedure RADIOGRAFIA
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE PROCEDURE "JUANCA"."RADIOGRAFIA" 
+(
+  porcentaje IN NUMBER DEFAULT 0.04 
+) AS 
+BEGIN
+    update servicios set precio=precio+(precio*porcentaje/100)
+    where    ID_CENTRO_COSTOS_SERVICIO = 1000002;
+END RADIOGRAFIA;
+
+/
+--------------------------------------------------------
+--  DDL for Procedure SERVICIO_CONSUMIDO
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE PROCEDURE "JUANCA"."SERVICIO_CONSUMIDO" 
+(
+  porcentaje IN NUMBER DEFAULT 0.02 
+) AS 
+BEGIN
+    update servicios set precio=precio+(precio*porcentaje/100)
+    where    ID_CENTRO_COSTOS_SERVICIO = 1000006;
+END SERVICIO_CONSUMIDO;
+
+/
+--------------------------------------------------------
+--  Constraints for Table CENTRO_COSTOS
+--------------------------------------------------------
+
+  ALTER TABLE "JUANCA"."CENTRO_COSTOS" ADD PRIMARY KEY ("CENTRO_COSTOS_ID") ENABLE;
+--------------------------------------------------------
+--  Constraints for Table DETALLES
+--------------------------------------------------------
+
+  ALTER TABLE "JUANCA"."DETALLES" ADD PRIMARY KEY ("DETALLE_ID") ENABLE;
+--------------------------------------------------------
+--  Constraints for Table FACTURAS
+--------------------------------------------------------
+
+  ALTER TABLE "JUANCA"."FACTURAS" ADD PRIMARY KEY ("FACTURA_ID") ENABLE;
+--------------------------------------------------------
+--  Constraints for Table PACIENTES
+--------------------------------------------------------
+
+  ALTER TABLE "JUANCA"."PACIENTES" ADD PRIMARY KEY ("PACIENTE_ID") ENABLE;
+--------------------------------------------------------
+--  Constraints for Table SERVICIOS
+--------------------------------------------------------
+
+  ALTER TABLE "JUANCA"."SERVICIOS" ADD PRIMARY KEY ("SERVICIO_ID") ENABLE;
+--------------------------------------------------------
+--  Ref Constraints for Table DETALLES
+--------------------------------------------------------
+
+  ALTER TABLE "JUANCA"."DETALLES" ADD CONSTRAINT "FK_FACTURA_DETALLE" FOREIGN KEY ("ID_DETALLE_FACTURA")
+	  REFERENCES "JUANCA"."FACTURAS" ("FACTURA_ID") ENABLE;
+  ALTER TABLE "JUANCA"."DETALLES" ADD CONSTRAINT "FK_SERVICIO_DETALLE" FOREIGN KEY ("ID_DETALLE_SERVICIO")
+	  REFERENCES "JUANCA"."SERVICIOS" ("SERVICIO_ID") ENABLE;
+--------------------------------------------------------
+--  Ref Constraints for Table FACTURAS
+--------------------------------------------------------
+
+  ALTER TABLE "JUANCA"."FACTURAS" ADD CONSTRAINT "FK_PACIENTE_FACTURA" FOREIGN KEY ("ID_PACIENTE_FACTURA")
+	  REFERENCES "JUANCA"."PACIENTES" ("PACIENTE_ID") ENABLE;
+--------------------------------------------------------
+--  Ref Constraints for Table SERVICIOS
+--------------------------------------------------------
+
+  ALTER TABLE "JUANCA"."SERVICIOS" ADD CONSTRAINT "FK_CENTRO_COSTOS_SERVICIO" FOREIGN KEY ("ID_CENTRO_COSTOS_SERVICIO")
+	  REFERENCES "JUANCA"."CENTRO_COSTOS" ("CENTRO_COSTOS_ID") ENABLE;
